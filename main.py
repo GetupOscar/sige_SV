@@ -14,6 +14,7 @@ import Parameters
 import math
 import utils
 import heapq
+from ShapleyExplainer import ShapleyExplainer
 #from NetworkModel import DQN
 # import DQN_ACB
 
@@ -55,6 +56,9 @@ def fanin_init(size, fanin=None):
 class Net(nn.Module):
     def __init__(self, s, a):
         super(Net, self).__init__()
+        self.state_dim = s  # Store state dimension for Shapley analysis
+        self.action_dim = a
+        
         self.layer1 = nn.Linear(s, args.network1_layer1)
         self.layer1.weight.data = fanin_init(self.layer1.weight.data.size())
 
@@ -83,12 +87,19 @@ class DQN(object):
         #self.epsilon = args.max_epsilon  # greedy police
         self.epsilon = 0.9
         self.steps = 0
+        
+        # Initialize Shapley explainer
+        self.shapley_explainer = ShapleyExplainer(self.eval_net)
+        # Store Shapley logs for post-training analysis
+        self.shapley_logs = []
 
     def choose_action(self, s, action_dim):
         if random.random() > self.epsilon:
             return random.randint(0, action_dim - 1)
         else:
-            pr_a = Variable(torch.FloatTensor([s]).to(device)).detach()
+            # Reshape state to match expected dimensions
+            s = np.array(s).reshape(1, -1)  # Reshape to [1, state_dim]
+            pr_a = Variable(torch.FloatTensor(s).to(device)).detach()
             action_value = self.eval_net.forward(pr_a)
             #print('action_value: ', action_value)
             #print(torch.max(action_value, 1))
@@ -100,6 +111,19 @@ class DQN(object):
     def learn(self):
         if self.learn_step_counter % TARGET_REPLACE_ITER == 0:
             self.target_net.load_state_dict(self.eval_net.state_dict())
+            # Calculate Shapley values every TARGET_REPLACE_ITER steps
+            if len(self.memory.samples) > 0:
+                b_s, _, _, _ = self.memory.sample(1)  # Get a single state for analysis
+                # Reshape state for Shapley analysis
+                b_s = b_s.reshape(1, -1)  # Reshape to [1, state_dim]
+                state_tensor = torch.FloatTensor(b_s).to(device)
+                importance = self.shapley_explainer.explain(state_tensor)
+                # Store Shapley values in logs for post-training analysis
+                self.shapley_logs.append({
+                    'episode': self.learn_step_counter,
+                    'values': importance
+                })
+                
         self.learn_step_counter += 1
         # target parameter update
         b_s, b_a, b_r, b_s_ = self.memory.sample()
@@ -147,77 +171,142 @@ class DQN(object):
         #return loss, target.max()
         return loss
 
+    def plot_shapley_summary(self):
+        """Plot summary of Shapley values after training"""
+        if len(self.shapley_logs) == 0:
+            return
+            
+        features = list(self.shapley_logs[0]['values'].keys())
+        values = {f: [] for f in features}
+        episodes = []
+        
+        for entry in self.shapley_logs:
+            episodes.append(entry['episode'])
+            for f in features:
+                values[f].append(entry['values'][f])
+        
+        plt.figure(figsize=(12, 6))
+        for f in features:
+            plt.plot(episodes, values[f], label=f)
+        
+        plt.title('Feature Importance Over Training')
+        plt.xlabel('Training Steps')
+        plt.ylabel('Shapley Value')
+        plt.legend()
+        plt.tight_layout()
+        plt.show(block=False)
+
 network.VR_spherical_rendering()
 network.VR_requirement()
 while (episode < MAX_EPISODES):
 
-    network.calculate_mec_user_distance()
-    network.calculate_user_mec_distance()
-    ACTIONS = []
-    for i in range(network.mec):
-        ACTIONS.append(i)
-    perms = permutations(range(len(ACTIONS)), len(network.fov_index))
-    perms = list(perms)
-    # print('perms: ', perms)
-    network.user_mobility()
-
+    # Initialize actions and get permutations
+    ACTIONS = list(range(network.mec))
+    perms = list(permutations(range(len(ACTIONS)), len(network.fov_index)))
+    
     #state_dim = len(network.fov_index)
-    state_dim = 1
-    action_dim = len(perms)
-
-    dqn = DQN(state_dim, action_dim)
-    action_index = int(dqn.choose_action([state_dim], action_dim))
+    if episode == 0:  # Only create DQN once at the start
+        # Enhanced state features
+        state_dim = 5  # [user_mec_distance, mec_compute_capacity, user_position_x, user_position_y, bandwidth]
+        action_dim = len(perms)
+        dqn = DQN(state_dim, action_dim)
+    
+    # Create state vector with all features
+    current_state = np.array([
+        np.mean(network.user_mec_distance),  # Average user-MEC distance
+        np.mean(network.MEC_process_ability),  # Average MEC compute capacity
+        np.mean(network.user_x),  # Average user x position
+        np.mean(network.user_y),  # Average user y position
+        np.mean(network.R_down)  # Average bandwidth
+    ])
+    
+    action_index = int(dqn.choose_action(current_state, action_dim))
     #print('action_index: ', action_index)
     select_action = perms[action_index]
-    network.downlink_transmission_for_q_learning_new(select_action,network.fov_index)
+    # 1. Execute action and get immediate results
+    network.downlink_transmission_for_q_learning_new(select_action, network.fov_index)
     R_down = network.R_down
     R_down_new = R_down * B
-    #print('R_down_new: ', R_down_new)
+    
+    # Calculate render times and delays
     downlink_time_VR_device = np.zeros(network.user, dtype=float)
     render_time_VR_device = np.zeros(network.user, dtype=float)
     downlink_time = np.zeros(network.user, dtype=float)
     render_time = np.zeros(network.user, dtype=float)
+    
     for i in range(len(select_action)):
         for j in range(len(network.fov_index[i])):
             render_time[network.fov_index[i][j]] = network.fov_frame_cycle * 1000 / (network.MEC_process_ability[select_action[i]] * network.GPU * network.thread * 1000000000)
             render_time_VR_device[network.fov_index[i][j]] = network.original_frame_cycle * 1000 / (network.VR_process_ability * network.GPU * network.thread * 1000000000)
+    
     for i in range(network.user):
         downlink_time[i] = network.fov_frame * 1000 / R_down_new[i]
         downlink_time_VR_device[i] = network.original_frame * 1000 / R_down_new[i]
+    
+    # Calculate means
     downlink_time_sum = sum(downlink_time)
     render_time_sum = sum(render_time)
     downlink_time_VR_device_sum = sum(downlink_time_VR_device)
     render_time_VR_device_sum = sum(render_time_VR_device)
-    #print('downlink_time_sum: ', downlink_time_sum/network.user)
+    
     downlink_time_mean[episode] = downlink_time_sum/network.user
     render_time_mean[episode] = render_time_sum / network.user
     downlink_time_VR_device_mean[episode] = downlink_time_VR_device_sum / network.user
     render_time_VR_device_mean[episode] = render_time_VR_device_sum / network.user
     total_time_mean[episode] = downlink_time_mean[episode] + render_time_mean[episode]
     total_time_VR_device_mean[episode] = downlink_time_VR_device_mean[episode] + render_time_VR_device_mean[episode]
+    
+    # Calculate QoE
     network.QoE()
     qoe[episode] = network.sum_V_PSNR
     running_qoe[episode] = (1 - GAMMA) * network.sum_V_PSNR + GAMMA * running_qoe[episode - 1]
-    dqn.memory.add([state_dim], [action_index], running_qoe[episode], [state_dim])
+    
+    # 2. Update environment state
+    network.user_mobility()  # Update user positions
+    network.calculate_mec_user_distance()  # Update distances based on new positions
+    network.calculate_user_mec_distance()  # Update network distances
+    network.VR_requirement()  # Update VR requirements based on new positions
+    
+    # 3. Get next state after all updates
+    next_state = np.array([
+        np.mean(network.user_mec_distance),  # Average user-MEC distance after mobility
+        np.mean(network.MEC_process_ability),  # Average MEC compute capacity
+        np.mean(network.user_x),  # New user x positions
+        np.mean(network.user_y),  # New user y positions
+        np.mean(network.R_down)  # Updated bandwidth after action
+    ])
+    
+    # Debug state transitions
+    print(f"""
+Episode {episode} State Transition Debug:
+Previous State: {current_state}
+Action Taken: {select_action}
+Updated Network Params:
+- Distance: {np.mean(network.user_mec_distance):.2f}
+- Compute: {np.mean(network.MEC_process_ability):.2f}
+- Position X: {np.mean(network.user_x):.2f}
+- Position Y: {np.mean(network.user_y):.2f}
+- Bandwidth: {np.mean(network.R_down):.2f}
+Next State: {next_state}
+State Change: {next_state - current_state}
+""")
+    
+    dqn.memory.add(current_state, [action_index], running_qoe[episode], next_state)
+    print('episode: ', episode)
+    print('current_state: ', current_state)
+    print('action_index: ', action_index)
+    print('running_qoe: ', running_qoe[episode])
+    print('next_state: ', next_state)
     dqn_loss[episode] = dqn.learn()
+    
+    # Update current state
+    current_state = next_state.copy()
 
-    #print('select_action: ', select_action)
     iteration[episode] = episode
-    # print(episode)
     episode = episode + 1
 
-# print(running_qoe)
-# plt.plot(iteration, running_qoe)
-# plt.show()
-
-# # print(total_time_mean)
-# # print(total_time_VR_device_mean)
-# plt.plot(iteration, total_time_mean, color='green', label='Render in MEC')
-# plt.plot(iteration, total_time_VR_device_mean, color='red', label='Render in VR Device')
-# plt.legend()
-# plt.xlabel('Epoch')
-# plt.ylabel('Delay (ms)')
-# plt.show()
+# Plot Shapley value summary after training
+dqn.plot_shapley_summary()
 
 import matplotlib.pyplot as plt
 

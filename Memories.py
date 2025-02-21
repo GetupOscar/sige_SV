@@ -68,11 +68,13 @@ class RandomMemory:
         if len(self.samples) > args.memory_capacity:
             self.samples.pop(0)
 
-    def sample(self):
-        n = min(args.random_batch_size, len(self.samples))
-        #print('n: ', n)
+    def sample(self, n=None):
+        if n is None:
+            n = min(args.random_batch_size, len(self.samples))
+        else:
+            n = min(n, len(self.samples))
+            
         batch = random.sample(self.samples, n)
-
 
         s_arr = np.float32([i.state for i in batch])
         a_arr = np.float32([i.action for i in batch])
