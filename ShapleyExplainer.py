@@ -86,7 +86,7 @@ class ShapleyExplainer:
             self.history = self.history[-10:]
     
     def plot_summary(self, with_error=False, save_path=None):
-        """Plot Shapley values summary"""
+        """Plot Shapley values summary as horizontal bars"""
         if not self.history:
             return
             
@@ -108,30 +108,44 @@ class ShapleyExplainer:
         # Plot
         plt.figure(figsize=(12, 6))
         
-        # Bar positions
-        x = np.arange(len(features))
+        # Feature colors
+        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+        feature_colors = dict(zip(sorted_features, colors))
         
-        # Plot bars
-        bars = plt.bar(x, [means[f] for f in sorted_features])
+        # Plot horizontal bars
+        y_pos = np.arange(len(sorted_features))
+        bars = plt.barh(y_pos, [means[f] for f in sorted_features], 
+                       color=[feature_colors[f] for f in sorted_features],
+                       alpha=0.8)
         
-        # Color coding
-        for i, bar in enumerate(bars):
-            if means[sorted_features[i]] > 0:
-                bar.set_color('#4C72B0')  # Blue for positive
-            else:
-                bar.set_color('#DD8452')  # Orange for negative
+        # Add value labels and feature names
+        for i, (feature, value) in enumerate(zip(sorted_features, [means[f] for f in sorted_features])):
+            # Add feature name and value in the bar
+            plt.text(value/2, i, 
+                    f"{feature}\n{value:.2f}",
+                    va='center', ha='center',
+                    color='white',
+                    fontweight='bold',
+                    fontsize=10)
         
         # Add error bars if requested
         if with_error:
-            plt.errorbar(x, [means[f] for f in sorted_features],
-                        yerr=[stds[f] for f in sorted_features],
+            plt.errorbar(y=[i for i in range(len(sorted_features))],
+                        x=[means[f] for f in sorted_features],
+                        xerr=[stds[f] for f in sorted_features],
                         fmt='none', color='#404040', capsize=4)
         
-        plt.xticks(x, sorted_features, rotation=45, ha='right')
-        plt.title('Feature Importance Analysis' + 
-                 (' (with std dev)' if with_error else ''))
-        plt.xlabel('Features')
-        plt.ylabel('Shapley Value')
+        plt.yticks(y_pos, sorted_features)
+        plt.title('Feature Importance Analysis')
+        plt.xlabel('Shapley Value')
+        
+        # Add legend
+        legend_elements = [plt.Rectangle((0,0),1,1, color=c) for c in colors]
+        plt.legend(legend_elements, sorted_features,
+                  bbox_to_anchor=(1.05, 1), loc='upper left',
+                  title='Features')
+        
+        plt.grid(axis='x', linestyle='--', alpha=0.7)
         plt.tight_layout()
         
         # Save plot
@@ -146,6 +160,61 @@ class ShapleyExplainer:
         
         plt.savefig(save_path)
     
+    def plot_training_progress(self, save_path=None):
+        """Plot training progress of feature values"""
+        if not self.history:
+            return
+            
+        # Prepare data
+        features = self.feature_names
+        steps = list(range(0, len(self.history) * 5, 5))  # 每5步记录一次
+        values = {f: [] for f in features}
+        
+        for entry in self.history:
+            for f in features:
+                values[f].append(entry["shapley_values"][f])
+        
+        # Plot
+        plt.figure(figsize=(12, 6))
+        
+        # Feature colors
+        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+        
+        # Plot lines for each feature
+        for feature, color in zip(features, colors):
+            plt.plot(steps, values[feature], 
+                    marker='o', 
+                    linestyle='-', 
+                    linewidth=2,
+                    markersize=6,
+                    label=feature,
+                    color=color)
+        
+        plt.title('Feature Values During Training')
+        plt.xlabel('Training Steps')
+        plt.ylabel('Shapley Value')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        
+        # Add legend
+        plt.legend(bbox_to_anchor=(1.05, 1), 
+                  loc='upper left',
+                  title='Features')
+        
+        plt.tight_layout()
+        
+        # Save plot
+        if save_path is None:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+            save_path = os.path.join(os.getcwd(), f'training_progress_{timestamp}.png')
+        
+        # Create directory if it doesn't exist
+        directory = os.path.dirname(save_path)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+        
+        plt.savefig(save_path)
+        # plt.close()
+
     def save_history(self, filepath=None):
         """Save analysis history to JSON file"""
         if filepath is None:
@@ -160,6 +229,12 @@ class ShapleyExplainer:
         # Convert numpy values to Python native types
         history_copy = []
         for entry in self.history:
+            entry_copy = {
+                "metadata": entry["metadata"],
+                "raw_data": {
+                    "user_locations": {
+                        "x": float(entry["raw_data"]["user_locations"]["x"]),
+                        "y": float(entry["raw_data"]["user_locations"]["y"])
                     },
                     "bandwidth": float(entry["raw_data"]["bandwidth"]),
                     "mec_distance": float(entry["raw_data"]["mec_distance"]),

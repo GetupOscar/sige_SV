@@ -1,0 +1,222 @@
+[
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 41.875,
+        "y": 42.0
+      },
+      "bandwidth": 0.0,
+      "mec_distance": 0.0,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 0.0,
+      "MEC_process_ability": -0.0004134948054949441,
+      "user_position_x": 0.026784898092349373,
+      "user_position_y": 0.020237879206736885,
+      "bandwidth": 0.0
+    }
+  },
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 34.875,
+        "y": 39.5
+      },
+      "bandwidth": 0.24738721549510956,
+      "mec_distance": 59.62208938598633,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 7.002356865257025,
+      "MEC_process_ability": -1.9263778470456603,
+      "user_position_x": -2.550412244349719,
+      "user_position_y": -2.5403779389957584,
+      "bandwidth": -0.0023445715506871545
+    }
+  },
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 37.375,
+        "y": 39.5
+      },
+      "bandwidth": 0.37147057056427,
+      "mec_distance": 58.80744552612305,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 18.57925581087669,
+      "MEC_process_ability": -0.7039376283685367,
+      "user_position_x": 6.462527584532897,
+      "user_position_y": 5.7249428346753115,
+      "bandwidth": 0.043602977196375535
+    }
+  },
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 41.875,
+        "y": 42.0
+      },
+      "bandwidth": 0.0,
+      "mec_distance": 0.0,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 0.0,
+      "MEC_process_ability": -0.059591422478357955,
+      "user_position_x": 2.9098420043786373,
+      "user_position_y": 1.8308035631974537,
+      "bandwidth": 0.0
+    }
+  },
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 27.75,
+        "y": 38.125
+      },
+      "bandwidth": 0.30117008090019226,
+      "mec_distance": 61.16447448730469,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 10.867959382136663,
+      "MEC_process_ability": -3.6332356611887615,
+      "user_position_x": -3.6345840921004613,
+      "user_position_y": -3.6086330493291228,
+      "bandwidth": -0.002476158738136292
+    }
+  },
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 25.5,
+        "y": 39.5
+      },
+      "bandwidth": 0.41476234793663025,
+      "mec_distance": 61.14651870727539,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 10.18469281593959,
+      "MEC_process_ability": -3.3960867563883466,
+      "user_position_x": -3.42095177769661,
+      "user_position_y": -3.381843208273252,
+      "bandwidth": -0.003025789062182108
+    }
+  },
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 32.75,
+        "y": 31.875
+      },
+      "bandwidth": 0.3385779857635498,
+      "mec_distance": 61.90509796142578,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 11.041506293416024,
+      "MEC_process_ability": -3.687580378850301,
+      "user_position_x": -3.6690874665975577,
+      "user_position_y": -3.680587745706241,
+      "bandwidth": -0.002822753787040711
+    }
+  },
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 29.625,
+        "y": 43.125
+      },
+      "bandwidth": 0.306691974401474,
+      "mec_distance": 60.80917739868164,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 11.693746997912726,
+      "MEC_process_ability": -3.9054414490858718,
+      "user_position_x": -3.9004711965719845,
+      "user_position_y": -3.911861336231232,
+      "bandwidth": -0.002773290872573852
+    }
+  },
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 24.0,
+        "y": 38.25
+      },
+      "bandwidth": 0.3971455991268158,
+      "mec_distance": 61.71005630493164,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 9.7932632346948,
+      "MEC_process_ability": -3.2701396167278296,
+      "user_position_x": -3.2793906748294828,
+      "user_position_y": -3.2605375071366627,
+      "bandwidth": -0.0034884333610534666
+    }
+  },
+  {
+    "metadata": {
+      "timestamp": "20250221_2358",
+      "sampling_interval": 5
+    },
+    "raw_data": {
+      "user_locations": {
+        "x": 34.0,
+        "y": 35.625
+      },
+      "bandwidth": 0.3327454626560211,
+      "mec_distance": 60.96360397338867,
+      "process_ability": 4.5
+    },
+    "shapley_values": {
+      "user_mec_distance": 9.51553705732028,
+      "MEC_process_ability": -3.171080178022385,
+      "user_position_x": -3.179010506470998,
+      "user_position_y": -3.167580858866373,
+      "bandwidth": -0.0016855756441752118
+    }
+  }
+]

@@ -331,16 +331,19 @@ print(f"\nSaving results to: {output_dir}")
 
 # Plot feature importance without error bars
 print("Generating basic Shapley plot...")
-dqn.shapley_explainer.plot_summary(with_error=False)
-basic_plot_path = os.path.join(output_dir, f'shapley_basic_{timestamp}.png')
-plt.savefig(basic_plot_path)
-
+dqn.shapley_explainer.plot_summary(with_error=False, 
+                                  save_path=os.path.join(output_dir, f'shapley_basic_{timestamp}.png'))
 
 # Plot feature importance with error bars
 print("Generating Shapley plot with error bars...")
-dqn.shapley_explainer.plot_summary(with_error=True)
-error_plot_path = os.path.join(output_dir, f'shapley_with_error_{timestamp}.png')
-plt.savefig(error_plot_path)
+dqn.shapley_explainer.plot_summary(with_error=True, 
+                                  save_path=os.path.join(output_dir, f'shapley_with_error_{timestamp}.png'))
+
+# Plot training progress
+print("Generating training progress plot...")
+dqn.shapley_explainer.plot_training_progress(
+    save_path=os.path.join(output_dir, f'training_progress_{timestamp}.png'))
+plt.show(block=False)
 
 
 # Plot training metrics
@@ -364,6 +367,7 @@ plt.legend()
 plt.tight_layout()
 metrics_plot_path = os.path.join(output_dir, f'training_metrics_{timestamp}.png')
 plt.savefig(metrics_plot_path)
+plt.show()
 
 
 # Save Shapley analysis data
