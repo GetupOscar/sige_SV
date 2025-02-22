@@ -18,7 +18,7 @@ print(abs_path)
 sys.path.insert(0, abs_path + "/utils")
 sys.path.insert(0, abs_path + "/env")
 
-import Parameters, Check as ch
+import Parameters
 from typing import Dict, List
 
 # hyper parameters
