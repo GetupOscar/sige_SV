@@ -206,7 +206,7 @@ while (episode < MAX_EPISODES):
     #     print(f"\nAction Space:")
     #     print(f"Number of MECs: {network.mec}")
     #     print(f"Number of permutations: {perms_length}")
-     
+    
     # Get and validate action
     action_index = dqn.choose_action(current_state, action_dim, perms_length)
     if episode % 10 == 0:
